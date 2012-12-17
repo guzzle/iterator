@@ -25,6 +25,7 @@ class ChunkedIterator extends \IteratorIterator
     {
         parent::__construct($iterator);
         $this->chunkSize = $chunkSize;
+		$this->chunk = array();
     }
 
     /**
@@ -32,8 +33,21 @@ class ChunkedIterator extends \IteratorIterator
      */
     public function rewind()
     {
-        $this->next();
+		$this->getInnerIterator()->rewind();
+		$this->chunk = array();
     }
+
+	private function ensureBatchPresent() {
+		if(!is_null(key($this->chunk))) {
+			// chunk not completely fetched;
+			return;
+		}
+        $inner = $this->getInnerIterator();
+        for ($i = 0; $i < $this->chunkSize && $inner->valid(); $i++) {
+            $this->chunk[] = $inner->current();
+            $inner->next();
+        }
+	}
 
     /**
      * {@inheritdoc}
@@ -41,11 +55,6 @@ class ChunkedIterator extends \IteratorIterator
     public function next()
     {
         $this->chunk = array();
-        $inner = $this->getInnerIterator();
-        for ($i = 0; $i < $this->chunkSize && $inner->valid(); $i++) {
-            $this->chunk[] = $inner->current();
-            $inner->next();
-        }
     }
 
     /**
@@ -53,6 +62,7 @@ class ChunkedIterator extends \IteratorIterator
      */
     public function current()
     {
+		$this->ensureBatchPresent();
         return $this->chunk;
     }
 
@@ -61,6 +71,7 @@ class ChunkedIterator extends \IteratorIterator
      */
     public function valid()
     {
+		$this->ensureBatchPresent();
         return !empty($this->chunk);
     }
 }
