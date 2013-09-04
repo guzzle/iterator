@@ -17,7 +17,7 @@ class ChunkedIterator extends \IteratorIterator
      * @param \Traversable $iterator  Traversable iterator
      * @param int          $chunkSize Size to make each chunk
      */
-    public function __construct(\Traversable $iterator, $chunkSize)
+    public function __construct(\Iterator $iterator, $chunkSize)
     {
         parent::__construct($iterator);
         $this->chunkSize = $chunkSize;
